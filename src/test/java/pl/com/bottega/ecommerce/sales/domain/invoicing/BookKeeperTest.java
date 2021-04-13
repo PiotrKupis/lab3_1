@@ -8,7 +8,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pl.com.bottega.ecommerce.canonicalmodel.publishedlanguage.ClientData;
 import pl.com.bottega.ecommerce.canonicalmodel.publishedlanguage.Id;
-import pl.com.bottega.ecommerce.sales.domain.client.Client;
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductData;
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductDataBuilder;
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductType;
@@ -129,6 +128,34 @@ class BookKeeperTest {
     }
 
     @Test
+    void givenRequestOfInvoiceWithFiveElementsShouldReturnInvoiceWithFiveElements() {
+
+        ProductData productData = new ProductDataBuilder()
+                .withProductId(Id.generate())
+                .withName(DUMMY_PRODUCT_DATA_NAME)
+                .withSnapshotDate(new Date())
+                .withType(ProductType.STANDARD)
+                .withPrice(Money.ZERO)
+                .build();
+        RequestItem requestItem = new RequestItem(productData, 2, Money.ZERO);
+        invoiceRequest.add(requestItem);
+        invoiceRequest.add(requestItem);
+        invoiceRequest.add(requestItem);
+        invoiceRequest.add(requestItem);
+        invoiceRequest.add(requestItem);
+
+        when(taxPolicy.calculateTax(any(ProductType.class), any(Money.class))).thenReturn(DUMMY_TAX);
+        Invoice dummyInvoice = new Invoice(DUMMY_ID, DUMMY_CLIENT_DATA);
+        when(invoiceFactory.create(DUMMY_CLIENT_DATA)).thenReturn(dummyInvoice);
+
+        Invoice invoice = bookKeeper.issuance(invoiceRequest, taxPolicy);
+
+        int expectedNumberOfItems = 5;
+        int result = invoice.getItems().size();
+        assertEquals(expectedNumberOfItems, result);
+    }
+
+    @Test
     void givenRequestOfInvoiceWithZeroElementsShouldNotInvokeCalculateTaxMethod() {
 
         Invoice dummyInvoice = new Invoice(DUMMY_ID, DUMMY_CLIENT_DATA);
@@ -136,8 +163,7 @@ class BookKeeperTest {
 
         bookKeeper.issuance(invoiceRequest, taxPolicy);
 
-        int expectedNumberOfInvocation = 0;
-        verify(taxPolicy, times(expectedNumberOfInvocation)).calculateTax(any(ProductType.class), any(Money.class));
+        verifyNoInteractions(taxPolicy);
     }
 
     @Test
