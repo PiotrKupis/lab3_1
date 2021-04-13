@@ -127,6 +127,17 @@ class BookKeeperTest {
         assertEquals(expectedNumberOfItems, result);
     }
 
+    @Test
+    void givenRequestOfInvoiceWithZeroElementsShouldNotInvokeCalculateTaxMethod() {
+
+        Invoice dummyInvoice = new Invoice(DUMMY_ID, DUMMY_CLIENT_DATA);
+        when(invoiceFactory.create(DUMMY_CLIENT_DATA)).thenReturn(dummyInvoice);
+
+        bookKeeper.issuance(invoiceRequest, taxPolicy);
+
+        int expectedNumberOfInvocation = 0;
+        verify(taxPolicy, times(expectedNumberOfInvocation)).calculateTax(any(ProductType.class), any(Money.class));
+    }
 
 
 }
