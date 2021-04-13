@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pl.com.bottega.ecommerce.canonicalmodel.publishedlanguage.ClientData;
 import pl.com.bottega.ecommerce.canonicalmodel.publishedlanguage.Id;
+import pl.com.bottega.ecommerce.sales.domain.client.Client;
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductData;
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductDataBuilder;
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductType;
@@ -139,5 +140,16 @@ class BookKeeperTest {
         verify(taxPolicy, times(expectedNumberOfInvocation)).calculateTax(any(ProductType.class), any(Money.class));
     }
 
+    @Test
+    public void invoiceFactoryShouldInvokeCreateMethodOneTime() {
+
+        Invoice dummyInvoice = new Invoice(DUMMY_ID, DUMMY_CLIENT_DATA);
+        when(invoiceFactory.create(DUMMY_CLIENT_DATA)).thenReturn(dummyInvoice);
+
+        bookKeeper.issuance(invoiceRequest, taxPolicy);
+
+        int expectedNumberOfInvocation = 1;
+        verify(invoiceFactory, times(expectedNumberOfInvocation)).create(any(ClientData.class));
+    }
 
 }
